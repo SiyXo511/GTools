@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert JSON to Table - GTools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container tool-container">
+        <a href="{{ url_for('index') }}" class="back-link">&larr; Back to Tools</a>
+        <h1>Convert JSON to Table</h1>
+        
+        <div class="card">
+            <form id="from-json-form" class="tool-form">
+                <div class="form-group">
+                    <label for="from-json-file">1. Upload JSON File:</label>
+                    <input type="file" id="from-json-file" name="file" accept=".json" required>
+                </div>
+                <div class="form-group">
+                    <label>2. Choose Output Format:</label>
+                    <div class="output-options">
+                        <div class="selection-wrapper">
+                            <input type="radio" id="output-csv" name="output_format" value="csv" checked>
+                            <label for="output-csv">CSV</label>
+                        </div>
+                        <div class="selection-wrapper">
+                            <input type="radio" id="output-xlsx" name="output_format" value="xlsx">
+                            <label for="output-xlsx">Excel (.xlsx)</label>
+                        </div>
+                        <div class="selection-wrapper">
+                            <input type="radio" id="output-xls" name="output_format" value="xls">
+                            <label for="output-xls">Excel (.xls)</label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Convert</button>
+            </form>
+        </div>
+
+        <div class="result-container" id="result-container" style="display: none;">
+            <div class="result-header">
+                <h3>Result</h3>
+                <button class="btn-copy" id="copy-btn" title="Copy to clipboard">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="result-content" id="result-content"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <footer class="footer">
+        <p>GTools &copy; 2025</p>
+    </footer>
+</body>
+</html>

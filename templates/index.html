@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTools - Excel & CSV Toolkit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <i class="fas fa-file-excel header-icon"></i>
+            <h1>GTools - Excel & CSV Toolkit</h1>
+        </div>
+        <p>Choose a tool to get started.</p>
+
+        <div class="tool-grid">
+            <a href="{{ url_for('show_list_tool') }}" class="tool-card">
+                <i class="fas fa-list-ol tool-icon"></i>
+                <h3>Convert Column to a List</h3>
+                <p>Upload an Excel/CSV file to convert a single column into a list format.</p>
+            </a>
+            <a href="{{ url_for('show_json_tool') }}" class="tool-card">
+                <i class="fas fa-file-code tool-icon"></i>
+                <h3>Convert Columns to JSON</h3>
+                <p>Select specific columns from your file and convert them into JSON format.</p>
+            </a>
+
+            <a href="{{ url_for('show_from_json_tool') }}" class="tool-card">
+                <i class="fas fa-file-export tool-icon"></i>
+                <h3>Convert JSON to Table</h3>
+                <p>Convert a JSON file (list of objects) into a CSV or Excel file.</p>
+            </a>
+            <a href="{{ url_for('show_clipboard_tool') }}" class="tool-card">
+                <i class="fas fa-paste tool-icon"></i>
+                <h3>Process from Clipboard</h3>
+                <p>Paste data directly to convert it to a list or a table.</p>
+            </a>
+        </div>
+    </div>
+    <footer class="footer">
+        <p>GTools &copy; 2025</p>
+    </footer>
+</body>
+</html>

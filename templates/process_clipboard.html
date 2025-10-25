@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process from Clipboard - Tools</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container tool-container">
+        <a href="{{ url_for('index') }}" class="back-link">&larr; Back to Tools</a>
+        <h1>Process from Clipboard</h1>
+        
+        <div class="card">
+            <form id="clipboard-form" class="tool-form">
+                <div class="form-group">
+                    <label for="clipboard-input">1. Paste your data here:</label>
+                    <textarea id="clipboard-input" name="data" rows="15" required placeholder="Paste your data here..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>2. Select action:</label>
+                    <div class="output-options">
+                         <div class="selection-wrapper">
+                            <input type="radio" id="action-to-list" name="action" value="to_list" checked>
+                            <label for="action-to-list">Convert Column to a List</label>
+                        </div>
+                        <div class="selection-wrapper">
+                            <input type="radio" id="action-from-json" name="action" value="from_json">
+                            <label for="action-from-json">Convert JSON to Table</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic options start here -->
+                <div id="to-list-options">
+                    <div class="form-group">
+                        <label>3. Output Method:</label>
+                        <div class="output-options">
+                             <div class="selection-wrapper">
+                                <input type="radio" id="list-output-display" name="list_output_method" value="display" checked>
+                                <label for="list-output-display">Display on page</label>
+                            </div>
+                            <div class="selection-wrapper">
+                                <input type="radio" id="list-output-file" name="list_output_method" value="file">
+                                <label for="list-output-file">Download as file</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="list-file-format-group" style="display: none;">
+                        <label>4. Choose File Format:</label>
+                        <div class="output-options">
+                            <div class="selection-wrapper">
+                                <input type="radio" id="list-format-md" name="list_file_format" value="md" checked>
+                                <label for="list-format-md">Markdown (.md)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="from-json-options" style="display: none;">
+                    <div class="form-group">
+                        <label>3. Output Method:</label>
+                        <div class="output-options">
+                            <div class="selection-wrapper">
+                                <input type="radio" id="json-output-display" name="json_output_method" value="display" checked>
+                                <label for="json-output-display">Display on page</label>
+                            </div>
+                            <div class="selection-wrapper">
+                                <input type="radio" id="json-output-file" name="json_output_method" value="file">
+                                <label for="json-output-file">Download as file</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="json-file-format-group" style="display: none;">
+                        <label>4. Choose File Format:</label>
+                        <div class="output-options">
+                            <div class="selection-wrapper">
+                                <input type="radio" id="json-format-csv" name="json_file_format" value="csv" checked>
+                                <label for="json-format-csv">CSV</label>
+                            </div>
+                            <div class="selection-wrapper">
+                                <input type="radio" id="json-format-xlsx" name="json_file_format" value="xlsx">
+                                <label for="json-format-xlsx">Excel (.xlsx)</label>
+                            </div>
+                            <div class="selection-wrapper">
+                                <input type="radio" id="json-format-xls" name="json_file_format" value="xls">
+                                <label for="json-format-xls">Excel (.xls)</label>
+                            </div>
+                            <div class="selection-wrapper">
+                                <input type="radio" id="json-format-md" name="json_file_format" value="md">
+                                <label for="json-format-md">Markdown (.md)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Dynamic options end here -->
+
+                <button type="submit" class="btn">Process Data</button>
+            </form>
+        </div>
+
+        <div class="result-container" id="result-container" style="display: none;">
+            <div class="result-header">
+                <h3>Result</h3>
+                <button class="btn-copy" id="copy-btn" title="Copy to clipboard">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="result-content" id="result-content"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
+
