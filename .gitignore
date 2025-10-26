@@ -113,3 +113,9 @@ $RECYCLE.BIN/
 *.json
 !requirements.txt
 !README.md
+
+# Keep Docker files
+!.dockerignore
+!Dockerfile
+!Dockerfile.production
+!docker-compose.yml

@@ -23,15 +23,59 @@
 - ✅ 多种输出方式（页面显示/文件下载）
 - ✅ 响应式Web界面
 - ✅ 实时数据预览
+- ✅ Docker部署支持
 
-## 安装和运行
+## 快速开始
 
-### 环境要求
+### 方式一：Docker部署（推荐）
+
+#### 使用docker-compose（最简单）
+
+```bash
+# 克隆项目
+git clone https://github.com/SiyXo511/GTools.git
+cd GTools
+
+# 启动服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+#### 使用Docker命令
+
+```bash
+# 构建镜像
+docker build -t gtools .
+
+# 运行容器
+docker run -d \
+  --name gtools \
+  -p 5000:5000 \
+  -v $(pwd)/uploads:/app/uploads \
+  -v $(pwd)/generated_files:/app/generated_files \
+  gtools
+
+# 查看日志
+docker logs -f gtools
+
+# 停止容器
+docker stop gtools
+docker rm gtools
+```
+
+### 方式二：本地部署
+
+#### 环境要求
 
 - Python 3.8+
 - pip
 
-### 安装步骤
+#### 安装步骤
 
 1. 克隆项目
 ```bash
@@ -66,13 +110,65 @@ python app.py
 6. 访问应用
 打开浏览器访问: http://127.0.0.1:5000
 
+## Docker部署说明
+
+### 端口配置
+
+- 默认端口：5000
+- 如需修改端口，编辑 `docker-compose.yml` 中的 `5000:5000`
+
+### 数据持久化
+
+项目自动挂载以下目录到宿主机：
+- `./uploads` - 用户上传的文件
+- `./generated_files` - 生成的文件
+
+### 环境变量
+
+可以通过环境变量配置应用：
+
+```yaml
+environment:
+  - FLASK_ENV=production
+  - FLASK_DEBUG=False
+  - FLASK_HOST=0.0.0.0
+  - FLASK_PORT=5000
+```
+
+### 生产环境建议
+
+1. **使用反向代理**（如Nginx）
+2. **启用HTTPS**
+3. **配置日志收集**
+4. **设置资源限制**
+
+示例Nginx配置：
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
 ## 项目结构
 
 ```
 GTools/
 ├── app.py                 # Flask应用主文件
 ├── requirements.txt       # 项目依赖
+├── Dockerfile            # Docker镜像配置
+├── docker-compose.yml    # Docker编排配置
+├── .dockerignore         # Docker忽略文件
 ├── .gitignore            # Git忽略文件
+├── README.md             # 项目文档
 ├── excel_processor/      # 数据处理模块
 │   ├── __init__.py
 │   ├── utils.py          # 工具函数
@@ -123,6 +219,7 @@ GTools/
 - **数据处理**: pandas 2.2.2, numpy 1.26.4
 - **Excel支持**: openpyxl 3.1.2, xlrd 2.0.2, xlwt 1.3.0
 - **前端**: HTML5, CSS3, JavaScript (ES6+)
+- **容器化**: Docker, Docker Compose
 - **样式**: 自定义CSS，响应式设计
 
 ## 开发说明
@@ -141,6 +238,43 @@ GTools/
 - 添加适当的错误处理
 - 编写清晰的文档字符串
 
+## 常见问题
+
+### Docker相关问题
+
+**Q: 如何查看容器日志？**
+```bash
+docker-compose logs -f
+# 或
+docker logs -f gtools
+```
+
+**Q: 如何重启服务？**
+```bash
+docker-compose restart
+# 或
+docker restart gtools
+```
+
+**Q: 如何更新应用？**
+```bash
+git pull
+docker-compose build
+docker-compose up -d
+```
+
+### 性能优化
+
+1. **增加Gunicorn**（生产环境）
+```dockerfile
+RUN pip install gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+```
+
+2. **使用Redis缓存**（可选）
+3. **设置文件大小限制**
+4. **配置请求超时**
+
 ## 许可证
 
 MIT License
@@ -156,3 +290,9 @@ MIT License
 - 支持基本的Excel/CSV数据转换功能
 - 支持剪贴板数据处理
 - 响应式Web界面
+- 支持Docker部署
+
+### v1.1.0
+- 添加Docker和Docker Compose支持
+- 优化文件处理性能
+- 改进错误处理机制

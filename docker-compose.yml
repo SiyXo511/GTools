@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # 开发/测试环境
+  gtools-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gtools-dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./generated_files:/app/generated_files
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=True
+    restart: unless-stopped
+    networks:
+      - gtools-network
+
+  # 生产环境
+  gtools-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: gtools-prod
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./generated_files:/app/generated_files
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=False
+    restart: unless-stopped
+    networks:
+      - gtools-network
+
+networks:
+  gtools-network:
+    driver: bridge
