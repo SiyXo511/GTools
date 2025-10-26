@@ -25,26 +25,41 @@
 - ✅ 实时数据预览
 - ✅ Docker部署支持
 
-## 🚀 快速部署（外网访问）
+## 🚀 快速开始
 
-### 最简单的方式（推荐新手）
+### 方式一：使用 ngrok 内网穿透（最简单，推荐）
 
-**使用 Railway 免费托管**（5分钟）：
-1. 点击下面的按钮
-2. 授权GitHub账户
-3. 等待自动部署
-4. 获得公网URL
+#### 快速开始
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template)
+1. **安装 ngrok**
+```bash
+# Windows（使用 Chocolatey）
+choco install ngrok
 
-或使用 Render：
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+# macOS
+brew install ngrok
 
----
+# 或访问 https://ngrok.com/download
+```
 
-## 快速开始
+2. **启动应用**
+```bash
+python app.py
+```
 
-### 方式一：Docker部署（推荐）
+3. **启动 ngrok**
+```bash
+# 新开一个终端
+ngrok http 5000
+```
+
+4. **访问应用**
+- 本地：http://localhost:5000
+- 外网：使用 ngrok 提供的 URL（如：https://abc123.ngrok.io）
+
+📖 详细说明请查看 [NGROK_DEPLOYMENT.md](NGROK_DEPLOYMENT.md)
+
+### 方式二：Docker部署
 
 #### 使用docker-compose（最简单）
 
