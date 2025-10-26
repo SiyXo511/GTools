@@ -29,35 +29,46 @@
 
 ### 方式一：使用 ngrok 内网穿透（最简单，推荐）
 
-#### 快速开始
+#### 🚀 一键启动（推荐）
 
-1. **安装 ngrok**
-```bash
-# Windows（使用 Chocolatey）
-choco install ngrok
+**Windows用户**：双击 `start-with-ngrok.bat` 或在PowerShell中运行 `.\start-with-ngrok.ps1`
 
-# macOS
-brew install ngrok
+脚本会自动：
+- ✅ 检查并安装Python依赖
+- ✅ 使用winget自动安装ngrok
+- ✅ 引导配置ngrok（首次运行）
+- ✅ 启动Flask应用
+- ✅ 启动ngrok隧道
 
-# 或访问 https://ngrok.com/download
+#### 📝 手动启动
+
+如果你想手动启动：
+
+1. **使用winget安装 ngrok**
+```powershell
+winget install ngrok.ngrok
 ```
 
-2. **启动应用**
+2. **配置ngrok**（首次使用）
 ```bash
+ngrok config add-authtoken YOUR_AUTH_TOKEN
+# 获取token: https://dashboard.ngrok.com/get-started/your-authtoken
+```
+
+3. **启动应用**
+```bash
+# 终端1：启动Flask
 python app.py
-```
 
-3. **启动 ngrok**
-```bash
-# 新开一个终端
+# 终端2：启动ngrok
 ngrok http 5000
 ```
 
 4. **访问应用**
 - 本地：http://localhost:5000
-- 外网：使用 ngrok 提供的 URL（如：https://abc123.ngrok.io）
+- 外网：使用ngrok提供的URL
 
-📖 详细说明请查看 [NGROK_DEPLOYMENT.md](NGROK_DEPLOYMENT.md)
+📖 详细说明请查看 [START.md](START.md) 和 [NGROK_DEPLOYMENT.md](NGROK_DEPLOYMENT.md)
 
 ### 方式二：Docker部署
 
