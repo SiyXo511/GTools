@@ -25,6 +25,23 @@
 - ✅ 实时数据预览
 - ✅ Docker部署支持
 
+## 🚀 快速部署（外网访问）
+
+### 最简单的方式（推荐新手）
+
+**使用 Railway 免费托管**（5分钟）：
+1. 点击下面的按钮
+2. 授权GitHub账户
+3. 等待自动部署
+4. 获得公网URL
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template)
+
+或使用 Render：
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
+---
+
 ## 快速开始
 
 ### 方式一：Docker部署（推荐）

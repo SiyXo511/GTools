@@ -32,6 +32,8 @@ RUN chmod -R 755 uploads generated_files
 
 # 暴露端口
 EXPOSE 5000
+ENV PORT=5000
 
 # 使用Gunicorn启动应用（生产环境）
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "app:app"]
+# 支持动态端口（Railway等平台）
+CMD gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 4 --timeout 120 --access-logfile - --error-logfile - app:app
