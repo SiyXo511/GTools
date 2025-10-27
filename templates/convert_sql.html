@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert SQL to Table - GTools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .file-upload-area {
+            border: 2px dashed #4CAF50;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px;
+            background: #f9f9f9;
+            transition: all 0.3s;
+        }
+        .file-upload-area:hover {
+            background: #f0f8f0;
+            border-color: #45a049;
+        }
+        .file-upload-area.has-file {
+            border-color: #2196F3;
+            background: #e3f2fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container tool-container">
+        <a href="{{ url_for('index') }}" class="back-link">&larr; Back to Tools</a>
+        <h1>Convert SQL INSERT to Table</h1>
+        
+        <div class="card">
+            <form id="sql-form" class="tool-form">
+                <div class="form-group">
+                    <label for="sql-file">Upload SQL File:</label>
+                    <div style="margin-top: 10px;">
+                        <input type="file" id="sql-file" name="file" accept=".sql,.txt" required 
+                               style="padding: 8px; border: 2px solid #ddd; border-radius: 5px; width: 100%; cursor: pointer;">
+                    </div>
+                    <small style="color: #666; display: block; margin-top: 5px;">Supports .sql and .txt files (max 50MB)</small>
+                    <div id="file-name-display" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px; display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span id="file-info"></span>
+                            <button type="button" id="clear-file-btn" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">Clear</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Choose Output Format:</label>
+                    <div class="output-options">
+                        <div class="selection-wrapper">
+                            <input type="radio" id="output-csv" name="output_format" value="csv" checked>
+                            <label for="output-csv">CSV</label>
+                        </div>
+                        <div class="selection-wrapper">
+                            <input type="radio" id="output-xlsx" name="output_format" value="xlsx">
+                            <label for="output-xlsx">Excel (.xlsx)</label>
+                        </div>
+                        <div class="selection-wrapper">
+                            <input type="radio" id="output-xls" name="output_format" value="xls">
+                            <label for="output-xls">Excel (.xls)</label>
+                        </div>
+                        <div class="selection-wrapper">
+                            <input type="radio" id="output-md" name="output_format" value="md">
+                            <label for="output-md">Markdown</label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Convert SQL to Table</button>
+            </form>
+        </div>
+
+        <div class="result-container" id="result-container" style="display: none;">
+            <div class="result-header">
+                <h3>Convert Successfully!</h3>
+            </div>
+            <div class="result-content" style="text-align: center;">
+                <p>Your file has been converted. Click the link below to download:</p>
+                <a href="#" id="download-link" class="btn" style="display: inline-block; margin-top: 10px;">
+                    <i class="fas fa-download"></i> Download File
+                </a>
+            </div>
+        </div>
+
+        <div class="error-container" id="error-container" style="display: none;">
+            <div class="error-content" id="error-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // File input handler
+        const fileInput = document.getElementById('sql-file');
+        const fileDisplay = document.getElementById('file-name-display');
+        const clearBtn = document.getElementById('clear-file-btn');
+        
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                fileDisplay.style.display = 'block';
+                document.getElementById('file-info').innerHTML = `
+                    <strong>Selected file:</strong> ${file.name} 
+                    <span style="color: #666;">(${fileSize} MB)</span>
+                `;
+            }
+        });
+        
+        // Clear file button
+        clearBtn.addEventListener('click', function() {
+            fileInput.value = '';
+            fileDisplay.style.display = 'none';
+            clearBtn.style.display = 'none';
+        });
+
+        // Form submission
+        document.getElementById('sql-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('sql-file');
+            if (!fileInput.files.length) {
+                alert('Please select a SQL file to upload');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('output_format', document.querySelector('input[name="output_format"]:checked').value);
+            formData.append('input_method', 'file');
+            
+            // Show loading
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Converting...';
+            
+            fetch('/convert/sql', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    return response.text().then(text => {
+                        console.error('Non-JSON response:', text.substring(0, 200));
+                        throw new Error('Server returned non-JSON response. Please check your SQL format.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                
+                if (data.error) {
+                    document.getElementById('result-container').style.display = 'none';
+                    document.getElementById('error-container').style.display = 'block';
+                    document.getElementById('error-content').textContent = data.error;
+                } else if (data.download_url) {
+                    document.getElementById('error-container').style.display = 'none';
+                    document.getElementById('result-container').style.display = 'block';
+                    document.getElementById('download-link').href = data.download_url;
+                }
+            })
+            .catch(error => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                console.error('Error:', error);
+                document.getElementById('error-container').style.display = 'block';
+                let errorMsg = error.message || 'An unknown error occurred.';
+                document.getElementById('error-content').textContent = errorMsg;
+            });
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <footer class="footer">
+        <p>GTools &copy; 2025</p>
+    </footer>
+</body>
+</html>
+

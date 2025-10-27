@@ -15,7 +15,10 @@ from excel_processor import (
     get_json_preview,
     process_clipboard_data_to_list,
     process_clipboard_json_to_table,
-    save_clipboard_data_to_file
+    save_clipboard_data_to_file,
+    sql_to_dataframe,
+    save_sql_to_file,
+    get_sql_preview
 )
 
 app = Flask(__name__)
@@ -24,8 +27,11 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 GENERATED_FOLDER = 'generated_files'
 ALLOWED_EXTENSIONS = {'xlsx', 'xls', 'csv'}
+ALLOWED_SQL_EXTENSIONS = {'sql', 'txt'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['GENERATED_FOLDER'] = GENERATED_FOLDER
+# Increase max content length to 50MB for large SQL files
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
 
 # Ensure the upload and generated directories exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -34,6 +40,19 @@ os.makedirs(GENERATED_FOLDER, exist_ok=True)
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Global error handler to ensure JSON responses
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return jsonify({'error': 'Request too large. Please reduce the SQL content size (max 50MB).'}), 413
+
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({'error': 'Bad request. Please check your input.'}), 400
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return jsonify({'error': 'Internal server error. Please try again.'}), 500
 
 @app.route('/')
 def index():
@@ -54,6 +73,10 @@ def show_from_json_tool():
 @app.route('/tool/clipboard')
 def show_clipboard_tool():
     return render_template('process_clipboard.html')
+
+@app.route('/tool/sql')
+def show_sql_tool():
+    return render_template('convert_sql.html')
 
 @app.route('/convert/list', methods=['POST'])
 def handle_list_conversion():
@@ -227,6 +250,48 @@ def handle_clipboard_conversion():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/convert/sql', methods=['POST'])
+def handle_sql_conversion():
+    input_method = request.form.get('input_method', 'file')
+    output_format = request.form.get('output_format', 'csv')
+    
+    sql_text = None
+    
+    try:
+        if input_method == 'file':
+            # Handle file upload
+            if 'file' not in request.files:
+                return jsonify({'error': 'No file part'}), 400
+            file = request.files['file']
+            if file.filename == '':
+                return jsonify({'error': 'No selected file'}), 400
+            
+            # Read SQL file
+            filename = file.filename
+            if not any(filename.lower().endswith('.' + ext) for ext in ALLOWED_SQL_EXTENSIONS):
+                return jsonify({'error': 'File must be a .sql or .txt file'}), 400
+            
+            # Read file content
+            sql_text = file.read().decode('utf-8')
+        else:
+            # Handle clipboard input
+            sql_text = request.form.get('sql_text')
+            if not sql_text:
+                return jsonify({'error': 'No SQL text provided'}), 400
+        
+        if not sql_text or not sql_text.strip():
+            return jsonify({'error': 'No SQL content provided'}), 400
+        
+        # Convert SQL to table and save
+        output_path = save_sql_to_file(sql_text, output_format, app.config['GENERATED_FOLDER'], 'sql_converted')
+        
+        return jsonify({'download_url': f'/download/{os.path.basename(output_path)}'})
+        
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': f'Error processing SQL: {str(e)}'}), 500
 
 @app.route('/download/<filename>')
 def download_file(filename):
