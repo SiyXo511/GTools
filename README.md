@@ -10,10 +10,11 @@
 2. **列转JSON** - 将Excel/CSV文件的指定列转换为JSON格式
 3. **JSON转表格** - 将JSON数据转换为CSV/Excel表格
 4. **剪贴板处理** - 直接处理剪贴板数据，支持列表和JSON转换
+5. **SQL转表格** - 将SQL INSERT语句转换为CSV/Excel/Markdown表格
 
 ### 📁 支持的文件格式
 
-- **输入格式**: Excel (.xlsx, .xls), CSV, JSON
+- **输入格式**: Excel (.xlsx, .xls), CSV, JSON, SQL
 - **输出格式**: CSV, Excel (.xlsx, .xls), Markdown (.md), TXT
 
 ### 🌟 主要功能
@@ -175,13 +176,15 @@ GTools/
 │   ├── to_list.py        # 列转列表功能
 │   ├── to_json.py        # 列转JSON功能
 │   ├── from_json.py      # JSON转表格功能
-│   └── clipboard.py      # 剪贴板处理功能
+│   ├── clipboard.py      # 剪贴板处理功能
+│   └── sql_to_table.py   # SQL转表格功能
 ├── templates/            # HTML模板
 │   ├── index.html
 │   ├── convert_list.html
 │   ├── convert_json.html
 │   ├── convert_from_json.html
-│   └── process_clipboard.html
+│   ├── process_clipboard.html
+│   └── convert_sql.html
 ├── static/               # 静态文件
 │   ├── css/
 │   │   └── style.css
@@ -212,6 +215,11 @@ GTools/
 - 粘贴数据到文本框
 - 选择转换类型（列表/JSON转表格）
 - 选择输出方式和格式
+
+### 5. SQL转表格
+- 上传SQL文件（.sql或.txt）
+- 选择输出格式（CSV/Excel/Markdown）
+- 下载转换后的表格文件
 
 ## 技术栈
 
@@ -296,3 +304,11 @@ MIT License
 - 添加Docker和Docker Compose支持
 - 优化文件处理性能
 - 改进错误处理机制
+
+### v1.2.0
+- 新增SQL转表格功能
+- 支持将SQL INSERT语句转换为CSV/Excel/Markdown表格
+- 支持复杂数据类型（JSON、字典、列表）
+- 支持反引号和中文字段名
+- 文件上传限制提升至50MB
+- 移除剪切板SQL输入功能，简化为仅支持文件上传
