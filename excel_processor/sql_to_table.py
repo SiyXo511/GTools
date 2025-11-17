@@ -4,154 +4,169 @@ import os
 from io import StringIO
 
 
+def parse_create_table(sql_text):
+    """
+    Parses a CREATE TABLE statement to extract column names.
+    Returns a dictionary mapping table name to a list of column names.
+    """
+    create_table_pattern = re.compile(
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?(\w+)`?\s*\((.*?)\);',
+        re.IGNORECASE | re.DOTALL
+    )
+    
+    tables = {}
+    match = create_table_pattern.search(sql_text)
+    if not match:
+        return tables
+
+    table_name = match.group(1)
+    columns_str = match.group(2)
+    
+    # Remove comments inside create table statement
+    columns_str = re.sub(r'--.*?$', '', columns_str, flags=re.MULTILINE)
+    
+    # Extract column names, which are typically enclosed in backticks
+    column_pattern = re.compile(r'^\s*`(\w+)`', re.MULTILINE)
+    columns = column_pattern.findall(columns_str)
+    
+    if columns:
+        tables[table_name] = columns
+            
+    return tables
+
 def parse_sql_insert(sql_text):
     """
     Parse SQL INSERT statements and extract data into a list of dictionaries.
-    Supports single and multiple INSERT statements.
-    
-    Args:
-        sql_text: SQL INSERT statement(s) as string
-        
-    Returns:
-        List of dictionaries (records) extracted from SQL
+    Supports single and multiple INSERT statements, and statements with or without column names.
+    Handles complex strings with escaped quotes.
+    Extracts column headers from CREATE TABLE statements if present.
     """
     # Remove comments
     sql_text = re.sub(r'--.*?$', '', sql_text, flags=re.MULTILINE)
     sql_text = re.sub(r'/\*.*?\*/', '', sql_text, flags=re.DOTALL)
     
+    table_schemas = parse_create_table(sql_text)
     all_records = []
     
-    # Find all INSERT INTO statements - use a simple approach
-    insert_positions = []
-    i = 0
-    while i < len(sql_text):
-        match = re.search(r'INSERT\s+INTO\s+', sql_text[i:], re.IGNORECASE)
-        if not match:
-            break
-        insert_positions.append(i + match.start())
-        i += match.end()
+    # Regex to find all INSERT statements
+    insert_pattern = re.compile(r'INSERT\s+INTO\s+`?(\w+)`?(?:\s*\((.*?)\))?\s+VALUES\s*(.*?);', re.IGNORECASE | re.DOTALL)
     
-    for insert_pos in insert_positions:
-        # Find the opening parenthesis after table name
-        i = insert_pos
-        while i < len(sql_text) and sql_text[i] != '(':
-            i += 1
-        
-        if i >= len(sql_text):
-            continue
-        
-        # Extract column names (content between first ( and ))
-        depth = 1
-        start_idx = i + 1
-        i += 1
-        
-        while i < len(sql_text) and depth > 0:
-            if sql_text[i] == '(':
-                depth += 1
-            elif sql_text[i] == ')':
-                depth -= 1
-            i += 1
-        
-        if depth != 0:
-            continue
-        
-        columns_str = sql_text[start_idx:i-1]
-        
-        # Find VALUES keyword
-        remaining_text = sql_text[i:]
-        values_match = re.search(r'VALUES\s*', remaining_text, re.IGNORECASE)
-        if not values_match:
-            continue
-        
-        values_start = i + values_match.end()
-        
-        # Find the end of this INSERT statement
-        next_insert_match = re.search(r'INSERT\s+INTO\s+', sql_text[values_start:], re.IGNORECASE)
-        if next_insert_match:
-            values_str = sql_text[values_start:values_start + next_insert_match.start()]
-        else:
-            values_str = sql_text[values_start:]
-        
-        # Parse column names
+    for match in insert_pattern.finditer(sql_text):
+        table_name, columns_str, values_section = match.groups()
+
         columns = []
-        for col in columns_str.split(','):
-            col = col.strip()
-            # Remove backticks if present
-            if col.startswith('`') and col.endswith('`'):
-                col = col[1:-1]
-            columns.append(col)
+        if columns_str:
+            columns = [col.strip().strip('`"') for col in columns_str.split(',')]
+        elif table_name in table_schemas:
+            columns = table_schemas[table_name]
+
+        # Extract value groups: (val1, val2), (val3, val4)
+        value_groups_str = values_section.strip()
         
-        # Parse value rows - extract content between parentheses
-        value_groups = []
-        depth = 0
-        start_idx = -1
-        
-        for j, char in enumerate(values_str):
-            if char == '(' and depth == 0:
-                start_idx = j + 1
-                depth = 1
-            elif char == '(':
-                depth += 1
-            elif char == ')' and depth == 1:
-                value_groups.append(values_str[start_idx:j])
-                depth = 0
-            elif char == ')':
-                depth -= 1
-        
-        # Parse each value group
-        for value_group in value_groups:
-            values = parse_values(value_group)
+        # Correctly parse multiple value tuples
+        if value_groups_str.startswith('('):
+            # Split records, handling the case of `), (`
+            records_str = re.split(r'\)\s*,\s*\(', value_groups_str)
+            # Clean up first and last elements
+            if records_str:
+                records_str[0] = records_str[0][1:]
+                records_str[-1] = records_str[-1][:-1]
+        else:
+            records_str = []
+
+        for record_str in records_str:
+            values = parse_values(record_str)
             
-            # Handle mismatch between column count and value count
-            if len(values) != len(columns):
-                # If fewer values than columns, pad with None
+            # If columns are still not determined, infer from the first row
+            if not columns:
+                columns = [f'column_{i+1}' for i in range(len(values))]
+                if table_name not in table_schemas:
+                    table_schemas[table_name] = columns
+
+            if len(values) == len(columns):
+                record = dict(zip(columns, values))
+                all_records.append(record)
+            else:
+                # Handle mismatch, pad with None or truncate
                 if len(values) < len(columns):
                     values.extend([None] * (len(columns) - len(values)))
-                # If more values than columns, truncate to match
                 else:
                     values = values[:len(columns)]
-            
-            # Create dictionary record
-            record = {}
-            for col, val in zip(columns, values):
-                record[col] = val
-            
-            all_records.append(record)
-    
+                record = dict(zip(columns, values))
+                all_records.append(record)
+
     return all_records
 
-
 def parse_values(value_string):
-    """Parse a comma-separated list of values, respecting quoted strings."""
+    """Parse a comma-separated list of values, respecting quoted strings and escaped characters."""
     values = []
-    current_value = ''
-    in_quotes = False
-    quote_char = None
     i = 0
-    
+    current_value = ""
     while i < len(value_string):
-        char = value_string[i]
+        # Find the start of the next value
+        trimmed_val_str = value_string[i:].lstrip()
+        i = len(value_string) - len(trimmed_val_str)
         
-        if char in ["'", '"'] and not in_quotes:
-            in_quotes = True
-            quote_char = char
-            current_value += char
-        elif char == quote_char and in_quotes:
-            in_quotes = False
-            quote_char = None
-            current_value += char
-        elif char == ',' and not in_quotes:
-            values.append(clean_value(current_value.strip()))
-            current_value = ''
+        if not trimmed_val_str:
+            break
+
+        if trimmed_val_str.upper().startswith('NULL'):
+            values.append(None)
+            i += 4
+            # Move past comma
+            next_comma = value_string.find(',', i)
+            if next_comma != -1:
+                i = next_comma + 1
+            else:
+                i = len(value_string)
+            continue
+        
+        if trimmed_val_str.startswith("'") or trimmed_val_str.startswith('"'):
+            quote_char = trimmed_val_str[0]
+            end_quote_idx = -1
+            search_start = i + 1
+            while True:
+                end_quote_idx = value_string.find(quote_char, search_start)
+                if end_quote_idx == -1:
+                    # Unterminated string
+                    break
+                # Check for escaped quote
+                if value_string[end_quote_idx-1] == '\\':
+                    search_start = end_quote_idx + 1
+                    continue
+                # For SQL, quotes are escaped by doubling them e.g. ''
+                if (end_quote_idx + 1 < len(value_string)) and (value_string[end_quote_idx+1] == quote_char):
+                    search_start = end_quote_idx + 2
+                    continue
+                break
+            
+            if end_quote_idx != -1:
+                value = value_string[i+1:end_quote_idx]
+                values.append(clean_value(f"{quote_char}{value}{quote_char}"))
+                i = end_quote_idx + 1
+            else:
+                # Add the rest as a value and break
+                values.append(clean_value(value_string[i:]))
+                break
         else:
-            current_value += char
-        
-        i += 1
-    
-    # Add the last value
-    if current_value:
-        values.append(clean_value(current_value.strip()))
-    
+            # Numeric or other unquoted value
+            next_comma = value_string.find(',', i)
+            if next_comma != -1:
+                value = value_string[i:next_comma].strip()
+                values.append(clean_value(value))
+                i = next_comma + 1
+            else:
+                value = value_string[i:].strip()
+                values.append(clean_value(value))
+                break # Last value
+                
+        # Move past comma
+        next_comma = value_string.find(',', i)
+        if next_comma != -1:
+            i = next_comma + 1
+        else:
+            break
+
     return values
 
 
