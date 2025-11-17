@@ -192,23 +192,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const clipboardForm = document.getElementById('clipboard-form');
     const actionToList = document.getElementById('action-to-list');
     const actionFromJson = document.getElementById('action-from-json');
+    const actionExtractLists = document.getElementById('action-extract-lists');
     const toListOptions = document.getElementById('to-list-options');
     const fromJsonOptions = document.getElementById('from-json-options');
+    const extractListsOptions = document.getElementById('extract-lists-options');
     const listFileFormatGroup = document.getElementById('list-file-format-group');
     const jsonFileFormatGroup = document.getElementById('json-file-format-group');
+    const extractFileFormatGroup = document.getElementById('extract-file-format-group');
     const listOutputFile = document.getElementById('list-output-file');
     const jsonOutputFile = document.getElementById('json-output-file');
+    const extractOutputFile = document.getElementById('extract-output-file');
 
     // Handle action selection
-    if (actionToList && actionFromJson) {
+    if (actionToList && actionFromJson && actionExtractLists) {
         actionToList.addEventListener('change', () => {
             toListOptions.style.display = 'block';
             fromJsonOptions.style.display = 'none';
+            extractListsOptions.style.display = 'none';
         });
 
         actionFromJson.addEventListener('change', () => {
             toListOptions.style.display = 'none';
             fromJsonOptions.style.display = 'block';
+            extractListsOptions.style.display = 'none';
+        });
+
+        actionExtractLists.addEventListener('change', () => {
+            toListOptions.style.display = 'none';
+            fromJsonOptions.style.display = 'none';
+            extractListsOptions.style.display = 'block';
         });
     }
 
@@ -237,6 +249,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (jsonOutputDisplay) {
         jsonOutputDisplay.addEventListener('change', () => {
             jsonFileFormatGroup.style.display = 'none';
+        });
+    }
+
+    // Handle output method changes for extract lists
+    if (extractOutputFile) {
+        extractOutputFile.addEventListener('change', () => {
+            extractFileFormatGroup.style.display = 'block';
+        });
+    }
+
+    const extractOutputDisplay = document.getElementById('extract-output-display');
+    if (extractOutputDisplay) {
+        extractOutputDisplay.addEventListener('change', () => {
+            extractFileFormatGroup.style.display = 'none';
         });
     }
 

@@ -30,6 +30,10 @@
                             <input type="radio" id="action-from-json" name="action" value="from_json">
                             <label for="action-from-json">Convert JSON to Table</label>
                         </div>
+                        <div class="selection-wrapper">
+                            <input type="radio" id="action-extract-lists" name="action" value="extract_lists">
+                            <label for="action-extract-lists">Extract Lists from Text</label>
+                        </div>
                     </div>
                 </div>
 
@@ -91,6 +95,31 @@
                             <div class="selection-wrapper">
                                 <input type="radio" id="json-format-md" name="json_file_format" value="md">
                                 <label for="json-format-md">Markdown (.md)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="extract-lists-options" style="display: none;">
+                    <div class="form-group">
+                        <label>3. Output Method:</label>
+                        <div class="output-options">
+                            <div class="selection-wrapper">
+                                <input type="radio" id="extract-output-display" name="extract_output_method" value="display" checked>
+                                <label for="extract-output-display">Display on page</label>
+                            </div>
+                            <div class="selection-wrapper">
+                                <input type="radio" id="extract-output-file" name="extract_output_method" value="file">
+                                <label for="extract-output-file">Download as file</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="extract-file-format-group" style="display: none;">
+                        <label>4. Choose File Format:</label>
+                        <div class="output-options">
+                            <div class="selection-wrapper">
+                                <input type="radio" id="extract-format-md" name="extract_file_format" value="md" checked>
+                                <label for="extract-format-md">Markdown (.md)</label>
                             </div>
                         </div>
                     </div>

@@ -15,7 +15,9 @@ from excel_processor import (
     get_json_preview,
     process_clipboard_data_to_list,
     process_clipboard_json_to_table,
-    save_clipboard_data_to_file
+    save_clipboard_data_to_file,
+    extract_lists_from_text,
+    format_extracted_lists
 )
 
 app = Flask(__name__)
@@ -221,6 +223,26 @@ def handle_clipboard_conversion():
                 file_format = request.form.get('json_file_format', 'csv')
                 df = process_clipboard_json_to_table(data_text, file_format)
                 output_path = save_clipboard_data_to_file(df, 'clipboard_data', file_format, app.config['GENERATED_FOLDER'])
+                return jsonify({'download_url': f'/download/{os.path.basename(output_path)}'})
+        
+        elif action == 'extract_lists':
+            # Extract lists from text
+            output_method = request.form.get('extract_output_method', 'display')
+            
+            if output_method == 'display':
+                result = extract_lists_from_text(data_text)
+                formatted_result = format_extracted_lists(result)
+                return jsonify({'data': formatted_result})
+            elif output_method == 'file':
+                file_format = request.form.get('extract_file_format', 'md')
+                result = extract_lists_from_text(data_text)
+                formatted_result = format_extracted_lists(result)
+                # Save as text file
+                output_filename = f"extracted_lists.md"
+                output_path = os.path.join(app.config['GENERATED_FOLDER'], output_filename)
+                os.makedirs(app.config['GENERATED_FOLDER'], exist_ok=True)
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    f.write(formatted_result)
                 return jsonify({'download_url': f'/download/{os.path.basename(output_path)}'})
         
         return jsonify({'error': 'Invalid action'}), 400
