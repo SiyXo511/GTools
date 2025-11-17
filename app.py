@@ -26,8 +26,11 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 GENERATED_FOLDER = 'generated_files'
 ALLOWED_EXTENSIONS = {'xlsx', 'xls', 'csv'}
+ALLOWED_SQL_EXTENSIONS = {'sql', 'txt'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['GENERATED_FOLDER'] = GENERATED_FOLDER
+# Increase max content length to 50MB for large SQL files
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
 
 # Ensure the upload and generated directories exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -36,6 +39,19 @@ os.makedirs(GENERATED_FOLDER, exist_ok=True)
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Global error handler to ensure JSON responses
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return jsonify({'error': 'Request too large. Please reduce the SQL content size (max 50MB).'}), 413
+
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({'error': 'Bad request. Please check your input.'}), 400
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return jsonify({'error': 'Internal server error. Please try again.'}), 500
 
 @app.route('/')
 def index():
@@ -56,6 +72,10 @@ def show_from_json_tool():
 @app.route('/tool/clipboard')
 def show_clipboard_tool():
     return render_template('process_clipboard.html')
+
+@app.route('/tool/sql')
+def show_sql_tool():
+    return render_template('convert_sql.html')
 
 @app.route('/convert/list', methods=['POST'])
 def handle_list_conversion():
@@ -249,6 +269,7 @@ def handle_clipboard_conversion():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/download/<filename>')
 def download_file(filename):
