@@ -73,9 +73,6 @@ def show_from_json_tool():
 def show_clipboard_tool():
     return render_template('process_clipboard.html')
 
-@app.route('/tool/sql')
-def show_sql_tool():
-    return render_template('convert_sql.html')
 
 @app.route('/convert/list', methods=['POST'])
 def handle_list_conversion():
